@@ -1,6 +1,9 @@
 RightSignature API integration PHP
 ==================================
+This is an example application to demonstrate how to use some of RightSignature's API calls. 
 
+WARNING: Please note that we are not PHP developers and this source code should only be used as a reference.
+We are open to Pull Requests if you have improvements to the code.
 
 SETUP
 -----
@@ -21,6 +24,12 @@ SETUP
 	/setup/save_rs_access.php
 
 6. Run your favorite webserver and host the files minus the 'setup' directory
+
+How to Contribute
+-----------------
+1. Fork repo: http://help.github.com/fork-a-repo/
+2. Commit and push your changes in your forked repo.
+3. Submit a Pull Request: http://help.github.com/pull-requests/
 
 Contributors:
  * Cary Dunn
