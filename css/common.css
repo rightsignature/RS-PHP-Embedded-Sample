@@ -1,0 +1,5 @@
+div.login-bar {background-color: #ddd; padding:10px 5px;}
+a.button:link, a.button:visited {background-color:#fff;font-weight:700;text-decoration:none; padding: 2px;}
+a.button:link:after, a.button:visited:after {}
+div.footer {background-color: #ddd; padding:10px 5px;}
+.center p {text-align: center;}

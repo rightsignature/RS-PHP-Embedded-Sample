@@ -1,0 +1,18 @@
+<?php
+// RS OAuth Creds
+$consumer_key = "KEY HERE";
+$consumer_secret = "SECRET HERE";
+$oauth_callback = "oob"; // An out-of-band oauth_callback
+
+// DB Creds
+$db_name = 'rs_php';
+$db_user = 'root';
+$db_pass = '';
+$db_server = '';
+
+// Site Vars
+$siteURL = "http://127.0.0.1:8888";
+
+// OAuth debug flag
+$debug = true;
+?>
