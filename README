@@ -1,0 +1,31 @@
+RightSignature API integration PHP
+==================================
+
+
+SETUP
+-----
+1. Create the database (assuming root is your root user):
+	mysqladmin create -uroot rs_php
+
+2. Create Tables:
+	mysql -uroot rs_php < settings.sql
+	mysql -uroot rs_php < documents.sql
+	mysql -uroot rs_php < templates.sql
+	mysql -uroot rs_php < users.sql
+
+3. Get your API tokens from RightSignature.com, set the Callback URL to be to'/setup/callback.php' ex. "http://localhost:8888/setup/oauth_callback.php"
+
+4. Copy 'config/creds.php.example' to 'config/creds.php' and update credentials in config/creds.php
+
+5. Get generate Request Token, visit authentication url, save OAuth Access Token and Verifier to settings table. There is a page that will do this for you:
+	/setup/save_rs_access.php
+
+6. Run your favorite webserver and host the files minus the 'setup' directory
+
+Contributors:
+ * Cary Dunn
+ * Alex Chee
+
+Copyright
+---------
+Released under an MIT License. See LICENSE for details.
