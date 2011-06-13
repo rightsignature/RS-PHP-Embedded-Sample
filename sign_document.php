@@ -5,6 +5,12 @@
 ob_start();
 require_once($_SERVER['DOCUMENT_ROOT'] . "/config/common.inc.php");
 
+// This is to check if an iPhone/iPad browser is used because the iframe will have to
+// make sure the zoom and scrolling functionality is disable. The easier solution
+// is to redirect the user to the RightSignature Embedded signing page which 
+// handles this.
+$is_mobile_safari = preg_match("/\bMobile\b.*\bSafari\b/", $_SERVER['HTTP_USER_AGENT']);
+
 // Width of Widget, CANNOT BE CHANGED and it cannot be dynamic. 706 is optimal size
 $widgetWidth=706;
 
@@ -29,6 +35,7 @@ if (isset($xml->message)) {
 	if ($xml->message == "Document is already signed.")
 		$alreadySigned = true;
 }
+
 ?>
 
 <html>
@@ -67,7 +74,13 @@ if (isset($xml->message)) {
 				foreach ($xml->{'signer-links'}->{'signer-link'} as $signer) {
 					echo "<h3>Select Signer</h3><div class=\"span-24\">";
 					echo "<span class=\"span-5\">Name: " . $signer->name . "</span>";
-					echo "<span class=\"span-8\"><a href=\"#\" onclick=\"change_signer('$rightsignature->base_url/signatures/embedded?height=$widgetHeight&rt=" . $signer->{'signer-token'} . "')\">Sign Document</a></span>";
+					
+					// Makes signer link redirect to RightSignature's link which handles all the odd cases (zooming, scrolling, etc...) that can make mess up Widget
+					if ($is_mobile_safari) {
+						echo "<span class=\"span-8\"><a href=\"$rightsignature->base_url/signatures/embedded?height=$widgetHeight&rt=" . $signer->{'signer-token'} . "\">Sign Document</a></span>";
+					} else { // Makes signer link render in iframe in case we want to customize the look
+						echo "<span class=\"span-8\"><a href=\"#\" onclick=\"change_signer('$rightsignature->base_url/signatures/embedded?height=$widgetHeight&rt=" . $signer->{'signer-token'} . "')\">Sign Document</a></span>";
+					}
 					echo "</div>";
 				}
 			}
