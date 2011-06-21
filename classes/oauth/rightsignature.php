@@ -125,7 +125,19 @@ class RightSignature {
     $response = $this->httpRequest($url, $auth_header, "GET");
     return $response;
   }
-  
+
+  // 
+	// Returns xml response from RightSignature's Document Details call
+	// 
+	// Arguments:
+	// $guid - RightSignature Document GUID
+	// 		ex. 'J1KHD2NX4KJ5S6X7S8'
+  function getDocumentDetails($guid) {
+    $url = $this->base_url . "/api/documents/" . $guid . ".xml";
+		
+    return $this->signAndSendRequest("GET", $url);
+  }
+
   // 
 	// Returns xml response from RightSignature's list of Templates
 	// 
