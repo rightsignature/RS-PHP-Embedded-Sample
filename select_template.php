@@ -89,9 +89,7 @@ $template_roles = array();
 						<label class="quiet top bottom">Description:</label>
 					</div>
 					<div class="span-23 top">
-						<textarea name="document_description">
-							<?php echo htmlspecialchars($template_xml->message) ?>
-						</textarea>
+						<textarea name="document_description"><?php echo htmlspecialchars($template_xml->message) ?></textarea>
 					</div>
 				</div>
 			</div>

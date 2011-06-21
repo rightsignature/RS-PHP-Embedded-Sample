@@ -77,7 +77,7 @@ if (isset($xml->message)) {
 					
 					// Makes signer link redirect to RightSignature's link which handles all the odd cases (zooming, scrolling, etc...) that can make mess up Widget
 					if ($is_mobile_safari) {
-						echo "<span class=\"span-8\"><a href=\"$rightsignature->base_url/signatures/embedded?height=$widgetHeight&rt=" . $signer->{'signer-token'} . "\">Sign Document</a></span>";
+						echo "<span class=\"span-8\"><a href=\"$rightsignature->base_url/signatures/embedded?rt=" . $signer->{'signer-token'} . "\">Sign Document</a></span>";
 					} else { // Makes signer link render in iframe in case we want to customize the look
 						echo "<span class=\"span-8\"><a href=\"#\" onclick=\"change_signer('$rightsignature->base_url/signatures/embedded?height=$widgetHeight&rt=" . $signer->{'signer-token'} . "')\">Sign Document</a></span>";
 					}
