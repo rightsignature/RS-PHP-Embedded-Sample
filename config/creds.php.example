@@ -1,8 +1,6 @@
 <?php
 // RS OAuth Creds
-$consumer_key = "KEY HERE";
-$consumer_secret = "SECRET HERE";
-$oauth_callback = "oob"; // An out-of-band oauth_callback
+$api_secure_token = "KEY HERE";
 
 // DB Creds
 $db_name = 'rs_php';

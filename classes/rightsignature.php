@@ -1,64 +1,12 @@
 <?php
-require_once("OAuth.php");
 
 class RightSignature {
   public $base_url = "https://rightsignature.com";
-  public $secure_base_url = "https://rightsignature.com";
-  public $oauth_callback = "oob";
-  public $consumer;
-  public $request_token;
-  public $access_token;
-  public $oauth_verifier;
-  public $signature_method;
-  public $request_token_path;
-  public $access_token_path;
-  public $authorize_path;
+  public $api_secure_token;
   public $debug = false;
   
-  function __construct($consumer_key, $consumer_secret, $oauth_callback = NULL) {
-    
-    if($oauth_callback) {
-      $this->oauth_callback = $oauth_callback;
-    }
-    
-    $this->consumer = new OAuthConsumer($consumer_key, $consumer_secret, $this->oauth_callback);
-    $this->signature_method = new OAuthSignatureMethod_HMAC_SHA1();
-    $this->request_token_path = $this->secure_base_url . "/oauth/request_token";
-    $this->access_token_path = $this->secure_base_url . "/oauth/access_token";
-    $this->authorize_path = $this->secure_base_url . "/oauth/authorize";
-    
-  }
-
-  function getRequestToken() {
-    $consumer = $this->consumer;
-    $request = OAuthRequest::from_consumer_and_token($consumer, NULL, "GET", $this->request_token_path);
-    $request->set_parameter("oauth_callback", $this->oauth_callback);
-    $request->sign_request($this->signature_method, $consumer, NULL);
-    $headers = Array();
-    $url = $request->to_url();
-    $response = $this->httpRequest($url, $headers, "GET");
-    parse_str($response, $response_params);
-    $this->request_token = new OAuthConsumer($response_params['oauth_token'], $response_params['oauth_token_secret'], 1);
-  }
-
-  function generateAuthorizeUrl() {
-    $consumer = $this->consumer;
-    $request_token = $this->request_token;
-    return $this->authorize_path . "?oauth_token=" . $request_token->key;
-  }
-
-  function getAccessToken() {
-    $request = OAuthRequest::from_consumer_and_token($this->consumer, $this->request_token, "GET", $this->access_token_path);
-    $request->set_parameter("oauth_verifier", $this->oauth_verifier);
-    $request->sign_request($this->signature_method, $this->consumer, $this->request_token);
-    $headers = Array();
-    $url = $request->to_url();
-    $response = $this->httpRequest($url, $headers, "GET");
-    parse_str($response, $response_params);
-    if($this->debug) {
-      error_log($response . "\n");
-    }
-    $this->access_token = new OAuthConsumer($response_params['oauth_token'], $response_params['oauth_token_secret'], 1);
+  function __construct($api_secure_token) {
+    $this->api_secure_token = $api_secure_token;
   }
 
   // 
@@ -116,13 +64,9 @@ class RightSignature {
 		if (!empty($params))
 			$url .= "?" . join('&', $params);
     if ($this->debug) { error_log("Getting documents at $url...\n"); }
-    $request = OAuthRequest::from_consumer_and_token($this->consumer, $this->access_token, "GET", $this->secure_base_url . $path);
-    $request->sign_request($this->signature_method, $this->consumer, $this->access_token);
-    $auth_header = $request->to_header($this->secure_base_url);
-    if ($this->debug) {
-      error_log($auth_header . "\n");
-    }
-    $response = $this->httpRequest($this->base_url . $path, $auth_header, "GET");
+		
+    $header = Array();
+    $response = $this->httpRequest($this->base_url . $path, "GET");
     return $response;
   }
 
@@ -135,7 +79,7 @@ class RightSignature {
   function getDocumentDetails($guid) {
     $url = $this->base_url . "/api/documents/" . $guid . ".xml";
 		
-    return $this->signAndSendRequest("GET", $url);
+    return $this->httpRequest($url, "GET");
   }
 
   // 
@@ -182,7 +126,7 @@ class RightSignature {
 		
     if ($this->debug) { error_log("Getting templates...\n"); }
 		
-    return $this->signAndSendRequest("GET", $path);
+    return $this->httpRequest($this->base_url . $path, "GET");
   }
 
 	// 
@@ -192,7 +136,7 @@ class RightSignature {
     $path = "/api/templates/$guid.xml";
     if ($this->debug) { error_log("Getting template $guid...\n"); }
 		 
-    return $this->signAndSendRequest("GET", $path);
+    return $this->httpRequest($this->base_url . $path, "GET");
 	}
 	
 	// 
@@ -213,7 +157,7 @@ class RightSignature {
 			$xml .= "<callback_location>$callbackURL</callback_location>";
 		$xml .= "</template>";
 		
-    $response = $this->signAndSendRequest("POST", $path, $xml);
+    $response = $this->httpRequest($this->base_url . $path, "POST", $xml);
 		$new_guid = (string)(simplexml_load_string($response)->guid);
     return $new_guid;
 	}
@@ -294,7 +238,7 @@ class RightSignature {
     }
 
 		// Send request to RightSignature.com API
-    $response = $this->signAndSendRequest("POST", $path, $xml);
+    $response = $this->httpRequest($this->base_url . $path, "POST", $xml);
 
     return $response;
 	}
@@ -386,29 +330,19 @@ class RightSignature {
 		if ($this->debug)
 			error_log("Built XML\n$xml");
 
-    $response = $this->signAndSendRequest("POST", $path, $xml);
+    $response = $this->httpRequest($this->base_url . $path, "POST", $xml);
 		$redirectToken = simplexml_load_string($response)->{'redirect-token'};
     return "$this->base_url/builder/new?rt=$redirectToken";
 	}
 
   function addUser($uname, $email) {
     $path = "/api/users.xml";
-	if ($this->debug) { error_log("Adding user...\n"); }
-    $xml = "<?xml version='1.0' encoding='UTF-8'?><user><name>$uname</name><email>$email</email></user>";
-	if ($this->debug) { error_log($xml); }
-    $request = OAuthRequest::from_consumer_and_token($this->consumer, $this->access_token, "POST", $path);
-    $request->sign_request($this->signature_method, $this->consumer, $this->access_token);
+		if ($this->debug) { error_log("Adding user...\n"); }
     
-    $auth_header = $request->to_header($this->base_url);
-    # Make sure there is a space and not a comma after OAuth
-    $auth_header = preg_replace("/Authorization\: OAuth\,/", "Authorization: OAuth ", $auth_header);
-    # Make sure there is a space between OAuth attribute
-    $auth_header = preg_replace('/\"\,/', '", ', $auth_header);
-    if ($this->debug) {
-      error_log($auth_header . "\n");
-    }
+		$xml = "<?xml version='1.0' encoding='UTF-8'?><user><name>$uname</name><email>$email</email></user>";
+		if ($this->debug) { error_log($xml); }
     
-    $response = $this->httpRequest($path, $auth_header, "POST", $xml);
+    $response = $this->httpRequest($this->base_url . $path, "POST", $xml);
     return $response;
   }
 
@@ -427,7 +361,7 @@ class RightSignature {
 		$path = "/api/documents/$guid/signer_links.xml?redirect_location=" . urlencode($redirectURL);
 		if ($this->debug) { error_log("Generating build token...\n"); }
 		
-    $response = $this->signAndSendRequest("GET", $path);
+    $response = $this->httpRequest($this->base_url . $path, "GET");
 		
     return $response;
 	}
@@ -435,57 +369,14 @@ class RightSignature {
   function testPost() {
     $path = "/api/test.xml";
     $xml = "<?xml version='1.0' encoding='UTF-8'?><testnode>Hello World!</testnode>";
-	if ($this->debug) {
-	    error_log($xml);
-	}
-    $request = OAuthRequest::from_consumer_and_token($this->consumer, $this->access_token, "POST", $this->secure_base_url . $path);
-    $request->sign_request($this->signature_method, $this->consumer, $this->access_token);
-    
-    $auth_header = $request->to_header($this->base_url);
-    # Make sure there is a space and not a comma after OAuth
-    $auth_header = preg_replace("/Authorization\: OAuth\,/", "Authorization: OAuth ", $auth_header);
-    # Make sure there is a space between OAuth attribute
-    $auth_header = preg_replace('/\"\,/', '", ', $auth_header);
-    if ($this->debug) {
-      error_log($auth_header . "\n");
-    }
-    
-    $response = $this->httpRequest($this->base_url . $path, $auth_header, "POST", $xml);
+		if ($this->debug) {
+		    error_log($xml);
+		}
+    $response = $this->httpRequest($this->base_url . $path, "POST", $xml);
     return $response;
   }
-
-	// 
-	// Generates a HTTP request, OAuth sign it, then sends the HTTP using the given HTTP method, 
-	// 	and returns the response.
-	// 
-	// Arguments:
-	// $method - HTTP method to use (usaully 'POST' or 'GET').
-	// 		ex. 'POST'
-	// $path - path to send request
-	// 		ex. '/templates.xml'
-	// $body - HTTP body to send to endpoint
-	// 		ex. "<?xml version='1.0' encoding='UTF-8' ? ><user><name>John Smith</name><email>john@example.com</email></user>"
-	function signAndSendRequest($method, $path, $body = NULL) {
-		// Generates OAuth Request with consumer token and access_token
-		$request = OAuthRequest::from_consumer_and_token($this->consumer, $this->access_token, $method, $this->secure_base_url . $path);
-
-		// Generates OAuth Signature and adds it to header
-    $request->sign_request($this->signature_method, $this->consumer, $this->access_token);
-    $auth_header = $request->to_header($this->secure_base_url);
-		if ($this->debug) {
-      error_log($auth_header . "\n");
-    }
-
-		// Send request to endpoint
-    $response = $this->httpRequest($this->base_url . $path, $auth_header, $method, $body);
-		if ($this->debug) {
-			error_log("GOT response\n$response");
-    }
-
-		return $response;
-	}
-  
-  function httpRequest($url, $auth_header, $method, $body = NULL) {
+	
+  function httpRequest($url, $method, $body = NULL) {
     if (!$method) {
       $method = "GET";
     };
@@ -494,7 +385,8 @@ class RightSignature {
     curl_setopt($curl, CURLOPT_URL, $url);
     curl_setopt($curl, CURLOPT_HEADER, 0);
     curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
-    curl_setopt($curl, CURLOPT_HTTPHEADER, array($auth_header)); // Set the headers.
+		// Set the headers with Secure Token
+    curl_setopt($curl, CURLOPT_HTTPHEADER, array("api-token: $this->api_secure_token"));
 	// TODO: remove this block when finished debugging
 	if ($this->debug) {
 		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, 0);				// Ignore SSL cert
@@ -503,7 +395,8 @@ class RightSignature {
       curl_setopt($curl, CURLOPT_POST, 1);
       curl_setopt($curl, CURLOPT_POSTFIELDS, $body);
       curl_setopt($curl, CURLOPT_CUSTOMREQUEST, $method);
-      curl_setopt($curl, CURLOPT_HTTPHEADER, array($auth_header, "Content-Type: text/xml;charset=utf-8"));   
+			// Set the headers with Secure Token
+      curl_setopt($curl, CURLOPT_HTTPHEADER, array("Content-Type: text/xml;charset=utf-8", "api-token: $this->api_secure_token"));   
     }
 
     $data = curl_exec($curl);
