@@ -1,6 +1,7 @@
-RightSignature API integration PHP
-==================================
-This is an example application to demonstrate how to use some of RightSignature's API calls. 
+RightSignature API Secure Token integration PHP
+===============================================
+This is an example application to demonstrate how to use some of RightSignature's API calls using the
+API Secure Token. The Secure Token will only be able to access the Token Owner's Documents and Templates.
 
 WARNING: Please note that we are not PHP developers and this source code should only be used as a reference.
 We are open to Pull Requests if you have improvements to the code.
@@ -20,10 +21,7 @@ SETUP
 
 4. Copy 'config/creds.php.example' to 'config/creds.php' and update credentials in config/creds.php
 
-5. Get generate Request Token, visit authentication url, save OAuth Access Token and Verifier to settings table. There is a page that will do this for you:
-	/setup/save_rs_access.php
-
-6. Run your favorite webserver and host the files minus the 'setup' directory
+5. Run your favorite webserver and host the files minus the 'setup' directory
 
 How to Contribute
 -----------------
