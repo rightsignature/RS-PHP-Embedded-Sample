@@ -82,7 +82,7 @@ class RightSignature {
 	// 		Default is 'false', and this is only available if the RightSignature API User is the account owner or an account admin.
 	// 		ex. 'false'
   function getDocuments($tags = NULL, $query = NULL, $page = NULL, $perPage = NULL, $recipientEmail = NULL, $allDocs = NULL) {
-    $url = $this->base_url . "/api/documents.xml";
+    $path = "/api/documents.xml";
 		$params = array();
 		
 		// 
@@ -116,13 +116,13 @@ class RightSignature {
 		if (!empty($params))
 			$url .= "?" . join('&', $params);
     if ($this->debug) { error_log("Getting documents at $url...\n"); }
-    $request = OAuthRequest::from_consumer_and_token($this->consumer, $this->access_token, "GET", $url);
+    $request = OAuthRequest::from_consumer_and_token($this->consumer, $this->access_token, "GET", $this->secure_base_url . $path);
     $request->sign_request($this->signature_method, $this->consumer, $this->access_token);
-    $auth_header = $request->to_header($this->base_url);
+    $auth_header = $request->to_header($this->secure_base_url);
     if ($this->debug) {
       error_log($auth_header . "\n");
     }
-    $response = $this->httpRequest($url, $auth_header, "GET");
+    $response = $this->httpRequest($this->base_url . $path, $auth_header, "GET");
     return $response;
   }
 
@@ -152,7 +152,7 @@ class RightSignature {
 	// 		Valid values are 10, 20, 30, 40, and 50. Default is 10.
 	// 		ex. 20
   function getTemplates($tags = NULL, $query = NULL, $page = NULL, $perPage = NULL) {
-    $url = $this->base_url . "/api/templates.xml";
+    $path = "/api/templates.xml";
 		$params = array();
 		
 		// 
@@ -178,21 +178,21 @@ class RightSignature {
 			$params[] = "per_page=" . urlencode($perPage);
 		
 		if (!empty($params))
-			$url .= "?" . join('&', $params);
+			$path .= "?" . join('&', $params);
 		
     if ($this->debug) { error_log("Getting templates...\n"); }
 		
-    return $this->signAndSendRequest("GET", $url);
+    return $this->signAndSendRequest("GET", $path);
   }
 
 	// 
 	// Gets Template XML from given guid
 	// 
 	function getTemplateDetails($guid){
-    $url = $this->base_url . "/api/templates/$guid.xml";
+    $path = "/api/templates/$guid.xml";
     if ($this->debug) { error_log("Getting template $guid...\n"); }
-		
-    return $this->signAndSendRequest("GET", $url);;
+		 
+    return $this->signAndSendRequest("GET", $path);
 	}
 	
 	// 
@@ -206,14 +206,14 @@ class RightSignature {
 	// 	If none is specified, the default in RightSignature's Account settings will be used
 	// 		ex. 'http://mysite/template_callback.php'
 	function prepackageTemplate($guids, $callbackURL=NULL) {
-		$url = $this->base_url . "/api/templates/". join(',', $guids) . "/prepackage.xml";
+		$path = "/api/templates/". join(',', $guids) . "/prepackage.xml";
 
 		$xml = "<?xml version='1.0' encoding='UTF-8'?><template>";
 		if (!empty($callbackURL))
 			$xml .= "<callback_location>$callbackURL</callback_location>";
 		$xml .= "</template>";
 		
-    $response = $this->signAndSendRequest("POST", $url, $xml);
+    $response = $this->signAndSendRequest("POST", $path, $xml);
 		$new_guid = (string)(simplexml_load_string($response)->guid);
     return $new_guid;
 	}
@@ -242,7 +242,7 @@ class RightSignature {
 	// 		ex. 'http://mysite/document_callback.php?template_id=123'
 	// $expires_in (Optional) - integer of days to expire document, allowed values are 2, 5, 15, or 30.
 	function sendTemplate($guid, $subject, $roles, $merge_fields, $tags = array(), $description = NULL, $callbackURL = NULL, $expires_in = 30){
-    $url = $this->base_url . "/api/templates.xml";
+    $path = "/api/templates.xml";
     if ($this->debug) { error_log("Sending templates...\n"); }
 
 		// Create XML for template prefile request
@@ -294,7 +294,7 @@ class RightSignature {
     }
 
 		// Send request to RightSignature.com API
-    $response = $this->signAndSendRequest("POST", $url, $xml);
+    $response = $this->signAndSendRequest("POST", $path, $xml);
 
     return $response;
 	}
@@ -348,7 +348,7 @@ class RightSignature {
 	// 		ex. 'http://mysite/'
 	// 
 	function createTemplateTokenURL($mergefields, $acceptableRoles, $tags = NULL, $callbackURL = NULL, $redirectURL = NULL) {
-    $url = $this->base_url . "/api/templates/generate_build_token.xml";
+    $path = "/api/templates/generate_build_token.xml";
 		if ($this->debug) { error_log("Generating build token...\n"); }
 
 		// Create XML for token request
@@ -386,17 +386,17 @@ class RightSignature {
 		if ($this->debug)
 			error_log("Built XML\n$xml");
 
-    $response = $this->signAndSendRequest("POST", $url, $xml);
+    $response = $this->signAndSendRequest("POST", $path, $xml);
 		$redirectToken = simplexml_load_string($response)->{'redirect-token'};
     return "$this->base_url/builder/new?rt=$redirectToken";
 	}
 
   function addUser($uname, $email) {
-    $url = $this->base_url . "/api/users.xml";
+    $path = "/api/users.xml";
 	if ($this->debug) { error_log("Adding user...\n"); }
     $xml = "<?xml version='1.0' encoding='UTF-8'?><user><name>$uname</name><email>$email</email></user>";
 	if ($this->debug) { error_log($xml); }
-    $request = OAuthRequest::from_consumer_and_token($this->consumer, $this->access_token, "POST", $url);
+    $request = OAuthRequest::from_consumer_and_token($this->consumer, $this->access_token, "POST", $path);
     $request->sign_request($this->signature_method, $this->consumer, $this->access_token);
     
     $auth_header = $request->to_header($this->base_url);
@@ -408,7 +408,7 @@ class RightSignature {
       error_log($auth_header . "\n");
     }
     
-    $response = $this->httpRequest($url, $auth_header, "POST", $xml);
+    $response = $this->httpRequest($path, $auth_header, "POST", $xml);
     return $response;
   }
 
@@ -424,21 +424,21 @@ class RightSignature {
 	// 		ex. 'http://127.0.0.1:8888/signer_redirect.php'
 	function getSingerLinks($guid, $redirectURL){
 		// Calls API and sets the redirect_location to send in after each successful signature
-		$url = $this->base_url . "/api/documents/$guid/signer_links.xml?redirect_location=" . urlencode($redirectURL);
+		$path = "/api/documents/$guid/signer_links.xml?redirect_location=" . urlencode($redirectURL);
 		if ($this->debug) { error_log("Generating build token...\n"); }
 		
-    $response = $this->signAndSendRequest("GET", $url);
+    $response = $this->signAndSendRequest("GET", $path);
 		
     return $response;
 	}
 
   function testPost() {
-    $url = $this->base_url . "/api/test.xml";
+    $path = "/api/test.xml";
     $xml = "<?xml version='1.0' encoding='UTF-8'?><testnode>Hello World!</testnode>";
 	if ($this->debug) {
 	    error_log($xml);
 	}
-    $request = OAuthRequest::from_consumer_and_token($this->consumer, $this->access_token, "POST", $url);
+    $request = OAuthRequest::from_consumer_and_token($this->consumer, $this->access_token, "POST", $this->secure_base_url . $path);
     $request->sign_request($this->signature_method, $this->consumer, $this->access_token);
     
     $auth_header = $request->to_header($this->base_url);
@@ -450,7 +450,7 @@ class RightSignature {
       error_log($auth_header . "\n");
     }
     
-    $response = $this->httpRequest($url, $auth_header, "POST", $xml);
+    $response = $this->httpRequest($this->base_url . $path, $auth_header, "POST", $xml);
     return $response;
   }
 
@@ -461,23 +461,23 @@ class RightSignature {
 	// Arguments:
 	// $method - HTTP method to use (usaully 'POST' or 'GET').
 	// 		ex. 'POST'
-	// $url - endpoint URL to send request
-	// 		ex. 'https://rightsignature.com/templates.xml'
+	// $path - path to send request
+	// 		ex. '/templates.xml'
 	// $body - HTTP body to send to endpoint
 	// 		ex. "<?xml version='1.0' encoding='UTF-8' ? ><user><name>John Smith</name><email>john@example.com</email></user>"
-	function signAndSendRequest($method, $url, $body = NULL) {
+	function signAndSendRequest($method, $path, $body = NULL) {
 		// Generates OAuth Request with consumer token and access_token
-		$request = OAuthRequest::from_consumer_and_token($this->consumer, $this->access_token, $method, $url);
+		$request = OAuthRequest::from_consumer_and_token($this->consumer, $this->access_token, $method, $this->secure_base_url . $path);
 
 		// Generates OAuth Signature and adds it to header
     $request->sign_request($this->signature_method, $this->consumer, $this->access_token);
-    $auth_header = $request->to_header($this->base_url);
+    $auth_header = $request->to_header($this->secure_base_url);
 		if ($this->debug) {
       error_log($auth_header . "\n");
     }
 
 		// Send request to endpoint
-    $response = $this->httpRequest($url, $auth_header, $method, $body);
+    $response = $this->httpRequest($this->base_url . $path, $auth_header, $method, $body);
 		if ($this->debug) {
 			error_log("GOT response\n$response");
     }
