@@ -24,7 +24,7 @@ if (empty($guid)) {
 }
 
 // Gets signer link and reload this page after each successfuly signature to refresh the signer-links list
-$response = $rightsignature->getSingerLinks($guid, "$siteURL/sign_document.php?guid=$guid");
+$response = $rightsignature->getSignerLinks($guid, "$siteURL/sign_document.php?guid=$guid");
 $xml = simplexml_load_string($response);
 
 // Checks xml for error->message node
