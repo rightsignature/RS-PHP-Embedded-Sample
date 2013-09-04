@@ -422,7 +422,7 @@ class RightSignature {
 	// $redirectURL - URL for RightSignature to callback when a signer signs the document. 
 	// 		This should be hit for each signer with parameters containing the signer GUID and document GUID.
 	// 		ex. 'http://127.0.0.1:8888/signer_redirect.php'
-	function getSingerLinks($guid, $redirectURL){
+	function getSignerLinks($guid, $redirectURL){
 		// Calls API and sets the redirect_location to send in after each successful signature
 		$path = "/api/documents/$guid/signer_links.xml?redirect_location=" . urlencode($redirectURL);
 		if ($this->debug) { error_log("Generating build token...\n"); }
